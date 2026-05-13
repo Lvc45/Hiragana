@@ -675,6 +675,77 @@
   .legend-dot.seion { background: var(--card-bg); }
   .legend-dot.dakuten { background: #d4c5b0; border: 2px solid #a08060; }
   .legend-dot.combo { background: #c8b89a; border: 2px solid var(--gold); }
+
+  /* ── PHRASES PANEL ── */
+  .phrase-category { margin-bottom: 2.8rem; }
+
+  .phrase-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+  }
+
+  .phrase-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(200,180,150,0.2);
+    border-radius: 4px;
+    padding: 1rem 1.1rem 0.9rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    cursor: default;
+  }
+  .phrase-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    border-color: rgba(181,38,30,0.25);
+  }
+  .phrase-hira {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.4;
+    margin-bottom: 0.35rem;
+    word-break: break-word;
+  }
+  .phrase-rom {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.82rem;
+    color: var(--red);
+    letter-spacing: 0.03rem;
+    margin-bottom: 0.25rem;
+  }
+  .phrase-fr {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--muted);
+  }
+  .phrase-cat-header {
+    display: flex; align-items: center; gap: 0.7rem;
+    margin-bottom: 0.6rem;
+  }
+  .phrase-cat-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+  .phrase-note {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: rgba(138,122,106,0.6);
+    margin-top: 0.3rem;
+  }
+
+  @media (max-width: 768px) {
+    .phrase-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.6rem; }
+  }
+  @media (max-width: 480px) {
+    .phrase-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .phrase-hira { font-size: 1.05rem; }
+    .phrase-fr   { font-size: 0.85rem; }
+  }
 </style>
 </head>
 <body>
@@ -689,6 +760,7 @@
   <button class="active" data-tab="learn">Apprendre</button>
   <button data-tab="flash">Flashcards</button>
   <button data-tab="quiz">Quiz</button>
+  <button data-tab="phrases">Phrases</button>
   <button data-tab="guide">Guide</button>
 </nav>
 
@@ -808,6 +880,14 @@
       <p id="result-msg">Excellent travail !</p>
       <button class="btn-start-quiz" onclick="resetQuiz()">Recommencer</button>
     </div>
+  </div>
+
+  <!-- ════════════════════════════ PHRASES ══════════════════════════ -->
+  <div class="tab-panel" id="panel-phrases">
+    <div class="section-label">Séjour au Japon</div>
+    <div class="section-title">Phrases de la vie courante</div>
+    <p class="phrase-note" style="margin-bottom:1.8rem;">Les mots d'emprunt (hôtel, taxi…) s'écrivent en katakana dans la pratique — ici tout est transcrit en hiragana pour l'apprentissage.</p>
+    <div id="phrases-content"></div>
   </div>
 
   <!-- ════════════════════════════ GUIDE ════════════════════════════ -->
@@ -1357,12 +1437,118 @@ function buildGojuon() {
 }
 
 // ════════════════════════════════════════════════
+// PHRASES
+// ════════════════════════════════════════════════
+
+const PHRASES = [
+  {
+    cat: 'Politesse',
+    icon: '🙏',
+    items: [
+      { h:'こんにちは',          r:'konnichiwa',               fr:'Bonjour' },
+      { h:'おはようございます',  r:'ohayou gozaimasu',         fr:'Bonjour (le matin)' },
+      { h:'こんばんは',          r:'konbanwa',                 fr:'Bonsoir' },
+      { h:'さようなら',          r:'sayounara',                fr:'Au revoir' },
+      { h:'ありがとうございます',r:'arigatou gozaimasu',       fr:'Merci beaucoup' },
+      { h:'すみません',          r:'sumimasen',                fr:'Excusez-moi / Pardon' },
+      { h:'おねがいします',      r:'onegaishimasu',            fr:'S\'il vous plaît' },
+      { h:'はい',                r:'hai',                      fr:'Oui' },
+      { h:'いいえ',              r:'iie',                      fr:'Non' },
+      { h:'わかりません',        r:'wakarimasen',              fr:'Je ne comprends pas' },
+      { h:'もういちどいってください', r:'mou ichido itte kudasai', fr:'Répétez, s\'il vous plaît' },
+      { h:'えいごをはなせますか',r:'eigo wo hanasemasu ka',    fr:'Parlez-vous anglais ?' },
+    ]
+  },
+  {
+    cat: 'Au restaurant',
+    icon: '🍜',
+    items: [
+      { h:'ひとりです',              r:'hitori desu',                 fr:'Une personne (pour une table)' },
+      { h:'これをください',          r:'kore wo kudasai',             fr:'Je voudrais ceci' },
+      { h:'おすすめはなんですか',    r:'osusume wa nan desu ka',      fr:'Qu\'est-ce que vous recommandez ?' },
+      { h:'おいしいです',            r:'oishii desu',                 fr:'C\'est délicieux !' },
+      { h:'みずをください',          r:'mizu wo kudasai',             fr:'De l\'eau, s\'il vous plaît' },
+      { h:'からいですか',            r:'karai desu ka',               fr:'C\'est épicé ?' },
+      { h:'さかなはたべられません',  r:'sakana wa taberaremasen',     fr:'Je ne mange pas de poisson' },
+      { h:'おかいけいをおねがいします', r:'okaikei wo onegaishimasu', fr:'L\'addition, s\'il vous plaît' },
+    ]
+  },
+  {
+    cat: 'Transport',
+    icon: '🚃',
+    items: [
+      { h:'～えきはどこですか',          r:'~ eki wa doko desu ka',              fr:'Où est la gare de ... ?' },
+      { h:'このでんしゃは～にとまりますか', r:'kono densha wa ~ ni tomarimasu ka', fr:'Ce train s\'arrête-t-il à ... ?' },
+      { h:'～まではいくらですか',        r:'~ made wa ikura desu ka',            fr:'Combien coûte le trajet jusqu\'à ... ?' },
+      { h:'つぎのえきはどこですか',      r:'tsugi no eki wa doko desu ka',       fr:'Quel est le prochain arrêt ?' },
+      { h:'まよってしまいました',        r:'mayotte shimaimashita',              fr:'Je me suis perdu(e)' },
+      { h:'くうこうへいきたいです',      r:'kuukou e ikitai desu',               fr:'Je veux aller à l\'aéroport' },
+      { h:'ちずをみせてください',        r:'chizu wo misete kudasai',            fr:'Montrez-moi la carte, s\'il vous plaît' },
+    ]
+  },
+  {
+    cat: 'Shopping',
+    icon: '🛍️',
+    items: [
+      { h:'いくらですか',          r:'ikura desu ka',        fr:'Combien ça coûte ?' },
+      { h:'たかいですね',          r:'takai desu ne',        fr:'C\'est cher !' },
+      { h:'みせてください',        r:'misete kudasai',       fr:'Montrez-moi ça, s\'il vous plaît' },
+      { h:'これをかいます',        r:'kore wo kaimasu',      fr:'Je prends ceci' },
+      { h:'ふくろをください',      r:'fukuro wo kudasai',    fr:'Un sac, s\'il vous plaît' },
+      { h:'かーどではらえますか',  r:'kaado de haraemasu ka',fr:'Puis-je payer par carte ?' },
+      { h:'ためしにきていいですか',r:'tameshi ni kite ii desu ka', fr:'Puis-je essayer ?' },
+    ]
+  },
+  {
+    cat: 'Urgences',
+    icon: '🚨',
+    items: [
+      { h:'たすけてください',            r:'tasukete kudasai',             fr:'Au secours !' },
+      { h:'きゅうきゅうしゃをよんでください', r:'kyuukyuusha wo yonde kudasai', fr:'Appelez une ambulance' },
+      { h:'けいさつをよんでください',    r:'keisatsu wo yonde kudasai',    fr:'Appelez la police' },
+      { h:'びょういんはどこですか',      r:'byouin wa doko desu ka',       fr:'Où est l\'hôpital ?' },
+      { h:'ぐあいがわるいです',          r:'guai ga warui desu',           fr:'Je me sens mal' },
+      { h:'まいごになりました',          r:'maigo ni narimashita',         fr:'Je me suis perdu(e)' },
+    ]
+  },
+];
+
+function buildPhrases() {
+  const container = document.getElementById('phrases-content');
+  container.innerHTML = '';
+  PHRASES.forEach(cat => {
+    const section = document.createElement('div');
+    section.className = 'phrase-category';
+    section.innerHTML = `
+      <div class="phrase-cat-header">
+        <span class="phrase-cat-icon">${cat.icon}</span>
+        <div class="section-label" style="margin-bottom:0">${cat.cat}</div>
+      </div>
+      <div class="group-line" style="margin-bottom:0.8rem"></div>`;
+    const grid = document.createElement('div');
+    grid.className = 'phrase-grid';
+    cat.items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'phrase-card';
+      card.innerHTML = `
+        <div class="phrase-hira">${item.h}</div>
+        <div class="phrase-rom">${item.r}</div>
+        <div class="phrase-fr">${item.fr}</div>`;
+      grid.appendChild(card);
+    });
+    section.appendChild(grid);
+    container.appendChild(section);
+  });
+}
+
+// ════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════
 
 buildLearn('all');
 buildFlashDeck();
 buildGojuon();
+buildPhrases();
 </script>
 </body>
 </html>
