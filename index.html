@@ -1247,19 +1247,32 @@ function startQuiz() {
   quizMode = document.querySelector('input[name="qmode"]:checked').value;
   const count = parseInt(document.querySelector('input[name="qcount"]:checked').value);
 
-  let pool = getAllByFilter('all');
+  let pool = [];
+  const hasFilter = cons.length > 0 || types.length > 0;
 
-  // filtre type
-  if (types.length > 0) {
-    pool = pool.filter(x => types.includes(x.type));
+  if (!hasFilter) {
+    pool = getAllByFilter('all');
+  } else {
+    // consonnes = seion uniquement
+    if (cons.length > 0) {
+      SEION.forEach(g => g.chars.forEach(x => {
+        if (cons.includes(getConsonant(x.h))) pool.push({...x, type:'seion'});
+      }));
+    }
+    // types = catégories supplémentaires explicites
+    if (types.includes('dakuten')) {
+      DAKUTEN.forEach(g => g.chars.forEach(x => pool.push({...x})));
+    }
+    if (types.includes('handakuten')) {
+      HANDAKUTEN.forEach(g => g.chars.forEach(x => pool.push({...x})));
+    }
+    if (types.includes('combo')) {
+      COMBO.forEach(g => g.chars.forEach(x => {
+        if (cons.length === 0 || cons.includes(getConsonant(x.h))) pool.push({...x});
+      }));
+    }
   }
 
-  // filtre consonne
-  if (cons.length > 0) {
-    pool = pool.filter(x => cons.includes(getConsonant(x.h)));
-  }
-
-  // sécurité
   if (!pool.length) {
     alert('Aucun hiragana sélectionné !');
     return;
